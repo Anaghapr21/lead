@@ -37,11 +37,11 @@ def export_to_excel(request):
     backend_data=Lead.objects.all()
     wb=Workbook()
     ws=wb.active
-    headers=['Date','Company Name','Company Address','Contact Person','Contact No','Email','Designation','Country','Company HeadQuarters','Business Verticals','Running Promotions','Divisional Operations','Additional Notes'] 
+    headers=['lead_no','Date','Company Name','Company Address','Country','Street','City','Contact Person','Contact No','Email','Designation','Company HeadQuarters','Business Verticals','Running Promotions','Divisional Operations','Additional Notes'] 
     ws.append(headers)
 
     for row in backend_data:
-        ws.append([row.date,row.company_name,row.company_address,row.contact_person,row.contact_no,row.email,row.designation,row.country,row.company_headquarters,row.business_verticals,row.running_promotions,row.divisional_operations,row.additional_notes])
+        ws.append([row.lead_no,row.date,row.company_name,row.company_address,row.country,row.street,row.city,row.contact_person,row.contact_no,row.email,row.designation,row.company_headquarters,row.business_verticals,row.running_promotions,row.divisional_operations,row.additional_notes])
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename=exported_data.xlsx'

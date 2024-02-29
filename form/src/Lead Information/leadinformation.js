@@ -31,6 +31,9 @@ import Implementation from '../Implementation/implementation';
 import axios from 'axios';
 import './leadinformation.css'; // Import your CSS file
 import BASE_URL from '../config';
+import 'react-phone-number-input/style.css'; // Import the CSS for styling
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css'; // Import the CSS for styling
 
 
 const LeadInformationForm = () => {
@@ -81,6 +84,78 @@ const [implementationType, setImplementationType] = useState('');
   const [isDesignationTouched,setIsDesignationTouched]=useState(false);
   const [isPage1Valid,setIsPage1Valid]=useState(false);
   const [currentDate, setCurrentDate] = useState('');
+  const [street,setStreet]=useState('');
+  const [city,setCity]=useState('');
+//   useEffect(() => {
+//     // Function to generate lead number based on the last stored lead number
+//     const generateLeadNo = () => {
+//         // Retrieve the last stored lead number from the database or localStorage
+//         let lastLeadNumber = localStorage.getItem('lastLeadNumber');
+        
+//         if (!lastLeadNumber) {
+//             // If there's no last stored lead number, generate a new one with the current date and 1 as the last digit
+//             const today = new Date();
+//             const day = String(today.getDate()).padStart(2, '0');
+//             const month = String(today.getMonth() + 1).padStart(2, '0'); // January is 0!
+//             const year = today.getFullYear();
+//             lastLeadNumber = `${day}${month}${year}/001`;
+//         } else {
+//             // Extract the serial number part and parse it as an integer
+//             const serialNumber = parseInt(lastLeadNumber.split('/')[1]);
+//             if (!isNaN(serialNumber)) {
+//                 // Increment the serial number
+//                 const incrementedSerial = String(serialNumber + 1).padStart(3, '0');
+//                 // Get the date part from the last lead number
+//                 const datePart = lastLeadNumber.slice(0, 8);
+//                 lastLeadNumber = `${datePart}/${incrementedSerial}`;
+//             } else {
+//                 // If serial number parsing fails, generate a new lead number
+//                 const today = new Date();
+//                 const day = String(today.getDate()).padStart(2, '0');
+//                 const month = String(today.getMonth() + 1).padStart(2, '0'); // January is 0!
+//                 const year = today.getFullYear();
+//                 lastLeadNumber = `${day}${month}${year}/001`;
+//             }
+//         }
+
+//         // Update the lead number state
+//         setLeadNo(lastLeadNumber);
+//     };
+
+//     generateLeadNo();
+// }, []); // Empty dependency array to run this effect only once
+useEffect(() => {
+  const generateLeadNo = async () => {
+      // Retrieve the last stored lead number from the database or localStorage
+      let lastLeadNumber = localStorage.getItem('lastLeadNumber');
+
+      if (!lastLeadNumber) {
+          // If there's no last stored lead number, generate a new one with the current date and 1 as the last digit
+          const today = new Date();
+          const day = String(today.getDate()).padStart(2, '0');
+          const month = String(today.getMonth() + 1).padStart(2, '0');
+          const year = today.getFullYear();
+          lastLeadNumber = `${day}${month}${year}/001`;
+      } else {
+          // Increment the lead number if it exists
+          const parts = lastLeadNumber.split('/');
+          let serialNumber = parseInt(parts[1]);
+          serialNumber++; // Increment by 1
+
+          // Pad the serial number to 3 digits
+          const incrementedSerial = String(serialNumber).padStart(3, '0');
+          
+          // Reconstruct the lead number
+          lastLeadNumber = `${parts[0]}/${incrementedSerial}`;
+      }
+
+      // Update the lead number state
+      setLeadNo(lastLeadNumber);
+  };
+
+  generateLeadNo();
+}, []);
+
 
   useEffect(() => {
     const today = new Date();
@@ -401,15 +476,21 @@ const handleDivisionalOperationsChange = (event) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    await saveLeadToDatabase(leadNo);
 
+        // Update localStorage with the latest lead number
+        localStorage.setItem('lastLeadNumber', leadNo);
     const leadData = {
+        lead_no:leadNo,
         company_name: companyName,
         company_address: companyAddress,
+        country: country,
+        street:street,
+        city:city,
         contact_person: `${contactPersonTitle} ${contactPerson}`,
         contact_no: `${countryCode} ${contactNo}`,
         email: emailAddress,
         designation: designation,
-        country: country,
         company_headquarters:companyHeadquarter,
         business_verticals:businessVerticals,
         running_promotions:runningPromotions,
@@ -434,7 +515,8 @@ const handleDivisionalOperationsChange = (event) => {
             alert('Thank you for your submission!'); // Show a thank you message
             window.location.href = 'https://loyalitsolutions.com/'; // Redirect to another website
 
-        } else {
+        } 
+        else {
             console.error('Failed to submit lead data');
             alert('Failed to submit lead data. Please try again later.'); // Show an error message
         }
@@ -444,6 +526,9 @@ const handleDivisionalOperationsChange = (event) => {
     }
 };
 
+const saveLeadToDatabase = async (leadNumber) => {
+  // Code to save lead to database
+};
 
 
 const clearFormFields = () => {
@@ -553,6 +638,19 @@ const clearFormFields = () => {
     const handleCountryChange = (event) => {
       setCountry(event.target.value);
     };
+  //     const handleCountryChange = (e) => {
+  //   const selectedCountry = e.target.value;
+  //   setCountry(selectedCountry);
+  //   // Find the selected country object from the list of countries
+  //   const selectedCountryObject = countries.find((c) => c.name.common === selectedCountry);
+  //   // Update the country code based on the selected country
+  //   if (selectedCountryObject && selectedCountryObject.callingCodes && selectedCountryObject.callingCodes.length > 0) {
+  //     setCountryCode(`+${selectedCountryObject.callingCodes[0]}`);
+  //   } else {
+  //     // If country code not found, fallback to default
+  //     setCountryCode('+1');
+  //   }
+  // };
   
     const handleDesignationChange=(event)=>{
       setDesignation(event.target.value);
@@ -603,13 +701,17 @@ const clearFormFields = () => {
     return (
       // <form  onSubmit={handleSubmit}>
         
-      <div className="container">
-      <div className="title">Lead Information</div>
+      <div className="container"  mx-auto px-4 py-8>
+      <div className="title text-center mb-8 text-2xl font-semibold">Lead Information</div>
       {/* <form action="#" onSubmit={handleSubmit} > */}
           <div className="user-details" style={{width:'500px'}}>
-              <div className="input-box">
-                  <span className="details">Lead No</span>
-                  <input type="text" name='lead_no'disabled/>
+              <div className="input-box" >
+                  <span className="details ">Lead No</span>
+                  <input type="text" name='lead_no'disabled
+                  value={leadNo}
+                  onChange={(e) => setLeadNo(e.target.value)}
+                  
+                  />
               </div>
               <div className="input-box">
                   <span className="details">Date</span>
@@ -631,7 +733,7 @@ const clearFormFields = () => {
     name='company_name'
     
   />
-  {isCompanyNameTouched && !companyName && <span className="error-message">Please enter company name</span>}
+  {isCompanyNameTouched && !companyName && <span className="error-message"style={{ color: 'red' }}>Please enter company name</span>}
 </div>
               <div className="input-box">
                   <span className="details">Company Address<span style={{color:'red'}}>*</span></span>
@@ -640,12 +742,61 @@ const clearFormFields = () => {
                   onBlur={()=>setIsCompanyAddressTouched(true)}
                   name='company_address'
                   required/>
-                  {isCompanyAddressTouched && !companyAddress && <span className='error-message'>Please enter company address</span>}
+                  {isCompanyAddressTouched && !companyAddress && <span className='error-message'style={{ color: 'red' }}>Please enter company address</span>}
               </div>
               {/* <div class="input-box">
                   <span class="details">Contact Person<span style={{color:'red'}}>*</span></span>
                   <input type="text" placeholder="Enter Name" required/>
               </div> */}
+               <div className="input-container">
+                <div className="input-box">
+                <span className="details">Street Name</span>
+    {/* <div style={{ display: 'flex', alignItems: 'center' }}> */}
+      
+      <input
+        type="text"
+        placeholder="Enter street Name"
+        required
+        value={street}
+        onChange={(e) => setStreet(e.target.value)}
+        // onBlur={()=>setIsContactPersonTouched(true)}
+        name='street'
+      />
+    {/* </div> */}
+              </div>
+              <div className="input-box">
+                <span className="details">City</span>
+    {/* <div style={{ display: 'flex', alignItems: 'center' }}> */}
+      
+      <input
+        type="text"
+        placeholder="Enter City Name"
+        required
+        value={city}
+        onChange={(e) => setCity(e.target.value)}
+        // onBlur={()=>setIsContactPersonTouched(true)}
+        name='city'
+      />
+    {/* </div> */}
+              </div>
+              </div>
+              <div className="input-box">
+                  <span className="details">Country<span style={{color:'red'}}>*</span></span>
+                  <select
+                  style={{width:'100%',height:'44px',borderColor:'#9b59b6',transition: 'all 0.3s ease',border:'1px solid #ccc',outline:'none',borderRadius:'5px',paddingLeft:'15px',fontSize:'16px',borderBottomWidth:'2px'}}
+                  value={country}
+                  onChange={handleCountryChange}
+                  required
+                  name='country'
+                  >
+                  <option value="" disabled>Select Country</option>
+                            {countries && countries.length > 0 && countries.map((countryData) => (
+                                <option key={countryData.name?.common} value={countryData.name?.common}>
+                                    {countryData.name?.common}
+                                </option>
+                  ))}
+                  </select>
+              </div>
   <div className="input-container">
   <div className="input-box">
     <span className="details">Contact Person<span style={{ color: 'red' }}>*</span></span>
@@ -669,12 +820,12 @@ const clearFormFields = () => {
         name='contact_person'
       />
     </div>
-    {isContactPersonTouched && !contactPerson && <span className='error-message'>Please enter contact person name</span>}
+    {isContactPersonTouched && !contactPerson && <span className='error-message' style={{ color: 'red' }}>Please enter contact person name</span>}
   </div>
 
   <div className="input-box">
     <span className="details">Contact No<span style={{ color: 'red' }}>*</span></span>
-    <div style={{ display: 'flex', alignItems: 'center' }}>
+    {/* <div style={{ display: 'flex', alignItems: 'center' }}>
       <select
         value={countryCode}
         onChange={(e) => setCountryCode(e.target.value)}
@@ -692,9 +843,22 @@ const clearFormFields = () => {
         onBlur={()=>setIsContactNoTouched(true)}
         name='contact_no'
       />
-    </div>
-    {isContactNoTouched && !contactNo && <span className="error-message">Please enter contact no</span>}
-    {isContactNoTouched && contactNo && !isContactNoValid && <span className='error-message'>Invalid contact number format</span>}
+    </div> */}
+     <div style={{ display: 'flex', alignItems: 'center' }}>
+          {/* <span style={{ marginRight: '4px', fontSize: '16px' }}>{countryCode}</span> */}
+          <PhoneInput
+            international
+            country={countryCode} // Set the default country code
+            value={contactNo}
+            onChange={setContactNo}
+            placeholder="Enter contact no"
+            onBlur={()=>setIsContactNoTouched(true)}
+            required
+            maxLength={15}
+          />
+        </div>
+    {isContactNoTouched && !contactNo && <span className="error-message"style={{ color: 'red' }}>Please enter contact no</span>}
+    {isContactNoTouched && contactNo && !isContactNoValid && <span className='error-message' style={{ color: 'red' }}>Invalid contact number format</span>}
   </div>
 </div>
 
@@ -707,8 +871,8 @@ const clearFormFields = () => {
                       onBlur={()=>setIsEmailTouched(true)}
                       name='email'
                    required/>
-                   {isEmailTouched && !emailAddress && <span className='error-message'>Please enter email</span>}
-                   {isEmailTouched && emailAddress && !isEmailValid && <span className='error-message'>Invalid email format</span>}
+                   {isEmailTouched && !emailAddress && <span className='error-message'style={{ color: 'red' }}>Please enter email</span>}
+                   {isEmailTouched && emailAddress && !isEmailValid && <span className='error-message'style={{ color: 'red' }}>Invalid email format</span>}
 
               </div>
               {/* <div class="input-box">
@@ -726,11 +890,10 @@ const clearFormFields = () => {
     required
     name='designation'
   />
-  {isDesignationTouched && !designation && <span className='error-message'>Please enter designation</span>}
+  {isDesignationTouched && !designation && <span className='error-message'style={{ color: 'red' }}>Please enter designation</span>}
 </div>
-              <div className="input-box">
+              {/* <div className="input-box">
                   <span className="details">Contact Person's Country<span style={{color:'red'}}>*</span></span>
-                  {/* <input type="text" placeholder="Select Country" required/> */}
                   <select
                   style={{width:'100%',height:'44px',borderColor:'#9b59b6',transition: 'all 0.3s ease',border:'1px solid #ccc',outline:'none',borderRadius:'5px',paddingLeft:'15px',fontSize:'16px',borderBottomWidth:'2px'}}
                   value={country}
@@ -745,7 +908,7 @@ const clearFormFields = () => {
                                 </option>
                   ))}
                   </select>
-              </div>
+              </div> */}
               <div className="input-box">
                   <span className="details">Company HeadQuarters</span>
                   <input type="text" placeholder="HeadQuarters Name" name='company_headquarters'  onChange={(e) => setCompanyHeadquarter(e.target.value)} 
@@ -767,6 +930,7 @@ const clearFormFields = () => {
                             <option value="Hospital">Hospital</option>
                             <option value="Education">Education</option>
                             <option value="Rental">Rental</option>
+                            <option value="Distribution">Distribution</option>
                         </select>
                     </div>
               <div className="input-box">
